@@ -26,6 +26,22 @@
     console.log(x);
   
 // --- 함수레벨 스코프
+
+
+var name = "David Kim";      // 전역 변수를 선언
+
+function showName() {
+    var name = "Minju Kim";   // 지역 변수를 선언
+    if (true) {
+        var name = "김민주";
+        console.log(name);
+    }
+    console.log(name);
+}
+showName();
+
+console.log(name);
+
   </script>
 </body>
 </html>
