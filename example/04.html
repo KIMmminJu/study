@@ -8,30 +8,24 @@
 </head>
 <body>
   <script>
-    var score = 1;
+    let a =1;
 
-    console.log(score); // 1
-
-    {
-      var score = 222;
+    if(true){
+      let a = 5;
     }
 
-    console.log(score); // 222
+    console.log(a);
+// --- 블록레벨 스코프
 
-// ------------------------------------ var 함수 레벨 스코프 예제
+    var x = 1;
 
-    let score = 1;
-
-    {
-      let score = 222;
-      let result = 777;
+    if(true){
+      var x = 5;
     }
 
-    console.log(score); // 1
-    console.log(result); // error
-
-// ------------------------------------ let 블록 레벨 스코프 예제
-
+    console.log(x);
+  
+// --- 함수레벨 스코프
   </script>
 </body>
 </html>
