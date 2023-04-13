@@ -1,33 +1,64 @@
 const todoInputElem = document.querySelector(".new-todo");
 const listElem = document.querySelector(".todo-list");
+const filtersList = document.querySelector('.filters');
+const filtersLink = document.querySelector('.filters a');
 
 // 이전에 저장된 목록 가져오기 . localStorage를 사용하여 새로 고침을 해도 목록이 그대로 남아있게
 // localStorage - 브라우저를 새로고침해도 남아있음, 여러 탭이 공유할 수 있음
 // cookie - ajax(xhr request) header에 포함되서 전달됨
 // .getItem() 키(문자열)을 전달해서 해당하는 값이 있으면 값을 반환한다(문자열 데이터) 없다면 null 반환
 const savedTodos = localStorage.getItem("todos");
+const savedfilter = localStorage.getItem("filter");
 let todos = [];
+let filter = 'all';
+
 if (savedTodos) {
   // localStorage에 저장된 savedTodos가 존재하면
   // 문자열데이터를 객체형태로 파싱하기위해서 JSON.parse() 로 파싱
-  todos = JSON.parse(savedTodos)
+  todos = JSON.parse(savedTodos);
 }
 
-todoInputElem.addEventListener("keydown", function (event) {
-  // 엔터키를 누르면
-  if (event.key === "Enter" && !event.isComposing) {
-    // input에 값을 가져와서 변수에 담고
-    const value = todoInputElem.value;
-    // input의 값을 초기화 한다
-    event.value = "";
+if(savedfilter){
+  filter = savedfilter;
+}
 
-    todos.push({ title: value, completed: false });
+todoInputElem.addEventListener('keydown', function (event) {
+  if (event.key === 'Enter' && !event.isComposing) {
+    // 새로운 할 일 객체 생성
+    const newTodo = {
+      id: Date.now(), // 고유한 id 값으로 현재 시간 사용
+      title: todoInputElem.value,
+      completed: false
+    };
 
-    localStorage.setItem("todos", JSON.stringify(todos));
+    // 할 일 목록에 추가
+    todos.push(newTodo);
 
-    // 데이터가 변경이 일어났으니까 화면을 다시 그리도록 한다.
+    // localStorage에 저장
+    localStorage.setItem('todos', JSON.stringify(todos));
+
+    // 화면 다시 그리기
     render();
   }
+});
+
+// filter 이벤트 리스너 추가
+// 데이터 갱신
+filtersList.addEventListener("click", function(event){
+  const targetElem = event.target;
+  // 대상 찾기
+  const href = targetElem.getAttribute("href");
+  if(href === "#/"){
+    filter = 'all';
+  } else if(href === "#/active"){
+    filter = 'active';
+  } else if(href === "#/completed"){
+    filter = 'completed';
+  }
+  // 필터 영역 다시 그리기
+  renderFilter();
+  // 목록 영역 다시 그리기
+  render();
 });
 
 // 이벤트가 발생하면(ex: click) --> 데이터를 변경하고(delete, toggle) --> 다시 그리기(render)
@@ -41,17 +72,17 @@ listElem.addEventListener(
     const targetElem = event.target;
 
     // li 엘리먼트 찾기 : closest() 메서드를 사용해서 li를 찾는다.
-    const liElem = targetElem.closest('li[data-index]');
+    const liElem = targetElem.closest('li[data-id]');
 
-    // 변경될 데이터(todo)를 찾기위한 index 정보 계산
-    const index = parseInt(liElem.dataset.index);
+    // 변경될 데이터(todo)를 찾기위한 id 정보
+    const id = liElem.dataset.id;
 
     // 삭제 버튼 클릭 시
     if (targetElem.classList.contains("destroy")) {
-      // 데이터 변경 : index를 사용하여 배열 todos 에서 삭제할 todo를 제거
-      todos.splice(index, 1);
+      // 데이터 변경 : id를 사용하여 배열 todos 에서 삭제할 todo를 제거
+      todos = todos.filter(todo => todo.id !== parseInt(id));
 
-      // 로컬 스토리에 데이터 갱신 : 옵션
+      // 로컬 스토리에 데이터 갱신 : 옵션x
       localStorage.setItem("todos", JSON.stringify(todos));
 
       // 화면 다시 그리기
@@ -60,10 +91,8 @@ listElem.addEventListener(
 
     // 체크박스가 토글 시
     else if (targetElem.classList.contains("toggle")) {
-      // 데이터 가져오기 : index를 사용하여 todo 데이터 가져오기
-      // var arr = ['a','b','c','d']; 
-      // 'c' 가져오려면? -> arr[2]
-      const todoItem = todos[index];
+      // 데이터 가져오기 : id를 사용하여 todo 데이터 가져오기
+      const todoItem = todos.find(todo => todo.id === parseInt(id));
 
       // 데이터 변경 : 가져온 todo 데이터에서 완료여부를 변경(반대 값으로) true -> false, false -> true
       todoItem.completed = !todoItem.completed;
@@ -72,42 +101,50 @@ listElem.addEventListener(
       localStorage.setItem("todos", JSON.stringify(todos));
 
       // 화면 다시 그리기
-      render();
+      render(); 
     }
   }
 );
 
-
 // 화면을 그리는 함수
-const render = function () {
-
+function render() {
   let listHTML = "";
-  // - todos 데이터를 순회하면서 listHTML의 문자열을 완성시킨다.
+
+  // 필터 조건에 맞게 목록을 가공하고
+
+  // 그 목록으로 화면을 그린다.
   todos.forEach((item, index) => {
-    const completedClass = item.completed ? "completed" : ""; 
-    // data-index, item.title 정보를 가져와서 문자열을 완성시키도록 한다.
+    const completedClass = item.completed ? "completed" : "";
     listHTML += `
-            <li data-index="${index}" class="${completedClass}">
-                <div class="view">
-                      <input class="toggle" type="checkbox" ${item.completed ? "checked" : ""}>
-                    <label>${item.title}</label>
-                    <button class="destroy"></button>
-                </div>
-            </li>`;
+      <li data-id="${item.id}" class="${completedClass}">
+        <div class="view">
+          <input class="toggle" type="checkbox" ${item.completed ? "checked" : ""}>
+          <label>${item.title}</label>
+          <button class="destroy"></button>
+        </div>
+      </li>
+    `;
   });
-  // 완성된 html 문자열을 innerHTML로 갱신한다
+
   listElem.innerHTML = listHTML;
-  // 초기화 안해도될것같은데...??
   todoInputElem.value = "";
-};
-
-const renderFilter = function() {
-
-  // 선택된 필터 정보가 담김 변수를 사용해서 class="selected"를 추가한다.
-  // <a class="${filter === 'active' ? 'selected' : ''}">all</a>
 }
 
+const renderFilter = function() {
+  const filterHTML = `
+  <li>
+    <a href="#/" class="${filter === 'all' ? 'selected' : ''}">All</a>
+  </li>
+  <li>
+    <a href="#/active" class="${filter === 'active' ? 'selected' : ''}">Active</a>
+  </li>
+  <li>
+    <a href="#/completed" class="${filter === 'completed' ? 'selected' : ''}">Completed</a>
+  </li>
+  `;
 
+  filtersList.innerHTML = filterHTML;
+}
 
 // 새로고침할때 이전에 저장된 목록 가져오기(window...)
 // 새로고침이 일어나면 로컬스토리에 저장된 데이터를 기반으로 다시 그려야하니까...
