@@ -1,7 +1,8 @@
 const todoInputElem = document.querySelector(".new-todo");
 const listElem = document.querySelector(".todo-list");
-const filtersList = document.querySelector('.filters');
-const filtersLink = document.querySelector('.filters a');
+const filtersElem = document.querySelector('.filters');
+const clearCompletedBtn = document.querySelector('.clear-completed');
+const todosCountElem = document.querySelector('.todo-count');
 
 // 이전에 저장된 목록 가져오기 . localStorage를 사용하여 새로 고침을 해도 목록이 그대로 남아있게
 // localStorage - 브라우저를 새로고침해도 남아있음, 여러 탭이 공유할 수 있음
@@ -23,7 +24,8 @@ if(savedfilter){
 }
 
 todoInputElem.addEventListener('keydown', function (event) {
-  if (event.key === 'Enter' && !event.isComposing) {
+  if (event.key === 'Enter' && !event.isComposing && todoInputElem.value !== '') {
+
     // 새로운 할 일 객체 생성
     const newTodo = {
       id: Date.now(), // 고유한 id 값으로 현재 시간 사용
@@ -42,9 +44,20 @@ todoInputElem.addEventListener('keydown', function (event) {
   }
 });
 
+// clear-completed 이벤트
+clearCompletedBtn.addEventListener('click', () => {
+  todos = todos.filter(item => !item.completed);
+
+  // localStorage에 저장
+  localStorage.setItem('todos', JSON.stringify(todos));
+
+  // 화면 다시 그리기
+  render();
+});
+
 // filter 이벤트 리스너 추가
 // 데이터 갱신
-filtersList.addEventListener("click", function(event){
+filtersElem.addEventListener("click", function(event){
   const targetElem = event.target;
   // 대상 찾기
   const href = targetElem.getAttribute("href");
@@ -109,11 +122,18 @@ listElem.addEventListener(
 // 화면을 그리는 함수
 function render() {
   let listHTML = "";
+  let filteredTodos = [];
 
   // 필터 조건에 맞게 목록을 가공하고
-
+  if (filter === 'all') {
+    filteredTodos = todos;
+  } else if (filter === 'active') {
+    filteredTodos = todos.filter(item => !item.completed);
+  } else if (filter === 'completed') {
+    filteredTodos = todos.filter(item => item.completed);
+  }
   // 그 목록으로 화면을 그린다.
-  todos.forEach((item, index) => {
+  filteredTodos.forEach((item, index) => {
     const completedClass = item.completed ? "completed" : "";
     listHTML += `
       <li data-id="${item.id}" class="${completedClass}">
@@ -126,7 +146,12 @@ function render() {
     `;
   });
 
+  const items = filteredTodos.length;
   listElem.innerHTML = listHTML;
+  todosCountElem.innerHTML = `
+    <strong>${items}</strong>
+    items left
+  `
   todoInputElem.value = "";
 }
 
@@ -143,7 +168,7 @@ const renderFilter = function() {
   </li>
   `;
 
-  filtersList.innerHTML = filterHTML;
+  filtersElem.innerHTML = filterHTML;
 }
 
 // 새로고침할때 이전에 저장된 목록 가져오기(window...)
@@ -153,4 +178,3 @@ const renderFilter = function() {
 window.addEventListener("load", function () {
   render();
 });
-
