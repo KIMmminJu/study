@@ -175,13 +175,22 @@ const TodoList = {
     let filteredTodos = this.data.todos;
     const filter = this.data.filter;
 
-    if (filter === "all") {
-      return filteredTodos;
-    } else if (filter === "active") {
-      return filteredTodos.filter((item) => !item.completed);
-    } else if (filter === "completed") {
-      return filteredTodos.filter((item) => item.completed);
-    }
+    return filteredTodos.filter((item) => {
+      if (filter === "all") {
+        return true;
+      } else if (filter === "active") {
+        return !item.completed;
+      } else if (filter === "completed") {
+        return item.completed;
+      }
+    });
+    // if (filter === "all") {
+    //   return filteredTodos;
+    // } else if (filter === "active") {
+    //   return filteredTodos.filter((item) => !item.completed);
+    // } else if (filter === "completed") {
+    //   return filteredTodos.filter((item) => item.completed);
+    // }
   },
   /** UI 그려내기*/
   renderList() {
