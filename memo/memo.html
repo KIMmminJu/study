@@ -5,13 +5,24 @@
     <title>메모장</title>
     <link rel="stylesheet" href="memo.css" />
     <script src="memo.js"></script>
+    <script
+      src="https://kit.fontawesome.com/3b4f84aa22.js"
+      crossorigin="anonymous"
+    ></script>
   </head>
   <body>
     <h1>memo</h1>
     <div class="main">
-      <textarea id="memo" rows="10" cols="65"></textarea>
-      <button id="add-btn">등록</button>
-      <button id="reset">초기화</button>
+      <textarea class="memo" id="memo" rows="10" cols="65"></textarea>
+      <div class="btn-list">
+        <button class="add-btn" id="add_btn">등록</button>
+        <button class="reset" id="reset">초기화</button>
+      </div>
+      <div class="list-info">
+        <span class="memo-count"></span>
+        <button class="clear-memolist">Clear memo_list</button>
+      </div>
+      ㅇ
       <ul class="memo-list"></ul>
     </div>
   </body>
